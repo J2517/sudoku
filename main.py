@@ -11,7 +11,6 @@ from azure.communication.email import EmailClient
 import os
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
-import json
 
 
 load_dotenv()
@@ -98,20 +97,11 @@ def enviarCorreo(sudoku):
     except Exception as ex:
         return {"message": str(ex)}, 500
 
-    if es_valido:
-        enviarCorreo(data["tablero"])
-        response = {"message": "Dato ubicado correctamente"}
-        status_code = 200
-    else:
-        response = {"message": "El dato no puede ser ubicado, cambie de posición"}
-        status_code = 400
-
-    return jsonify(response), status_code
-
 
 @app.route("/sudoku", methods=["POST"])
 def ingresarValor():
     try:
+        mensajeError = {"message": f"El dato no puede ser ubicado, cambie de posición"}
         data = request.json
         tablero = data["tablero"]  # Obtener el tablero de la solicitud POST
         valor = data["valor"]
@@ -123,33 +113,34 @@ def ingresarValor():
         subfila = columna // 3
         subcolumna = columna % 3
 
-        if not (0 <= fila <= 8 and 0 <= columna <= 8):
-            return jsonify({"message": "Fila y columna deben estar entre 1 y 9"}), 400
+        if not (0 <= fila <= 8 and 0 <= columna <= 8 and 1 <= valor <= 9):
+            return (
+                jsonify({"message": "Fila, columna y valor deben estar entre 1 y 9"}),
+                400,
+            )
+
+        # Validar que la posción esté disponible
+        if tablero[seccion]["columnas"][filaSeccion][subfila][subcolumna] != 0:
+            return jsonify(mensajeError), 400
 
         # Validar el nuevo valor en el sudoku
-        es_valido = validarNuevoValor(tablero, valor, fila, columna)
-        if es_valido:
+        esValido = validarNuevoValor(tablero, valor, fila, columna)
+        if esValido:
             for i in range(3):
                 for j in range(3):
-                    if tablero[seccion]["columnas"][filaSeccion][i][j] == valor:
-                        return False
-                    if tablero[seccion]["columnas"][j][subfila][subcolumna] == valor:
-                        return False
-                    if tablero[seccion]["columnas"][i][j][subcolumna] == valor:
-                        return False
-                    if tablero[seccion]["columnas"][i][subfila][j] == valor:
-                        return False
+                    if (
+                        tablero[seccion]["columnas"][filaSeccion][i][j] == valor
+                        or tablero[seccion]["columnas"][j][subfila][subcolumna] == valor
+                        or tablero[seccion]["columnas"][i][j][subcolumna] == valor
+                        or tablero[seccion]["columnas"][i][subfila][j] == valor
+                    ):
+                        return jsonify(mensajeError), 400
 
             tablero[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
             enviarCorreo(tablero)
             return jsonify({"message": f"Dato ubicado correctamente"}), 200
         else:
-            return (
-                jsonify(
-                    {"message": f"El dato no puede ser ubicado, cambie de posición"}
-                ),
-                400,
-            )
+            return jsonify(mensajeError), 400
     except Exception as ex:
         return jsonify({"message": str(ex)}), 500
 
