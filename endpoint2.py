@@ -31,6 +31,35 @@ def guardarTablero(sudoku):
 
 sudoku = cargarTablero()
 
+def obtener_filas_y_columnas(tablero):
+    filas = []
+    for bloque in tablero:
+        for fila_index, fila in enumerate(bloque["columnas"]):
+            fila_completa = [valor for subfila in fila for valor in subfila]  # Aplana la fila
+            filas.append(fila_completa)
+
+    # Generar columnas a partir de las filas
+    columnas = [[] for _ in range(9)]  # Inicializa una lista de 9 listas vacías para las columnas
+    for fila in filas:
+        for i in range(9):
+            columnas[i].append(fila[i])
+
+    return filas, columnas
+
+def validar_nuevo_valor(tablero, nuevo_valor, fila, columna):
+    # Obtener filas y columnas del tablero
+    filas, columnas = obtener_filas_y_columnas(tablero)
+
+    # Validar fila
+    if nuevo_valor in filas[fila]:
+        return False
+
+    # Validar columna
+    if nuevo_valor in columnas[columna]:
+        return False
+
+    return True
+
 
 # Verificar cuadrante
 def cuadrante(valor, fila, columna):
@@ -79,6 +108,31 @@ def enviarCorreo(sudoku):
         return jsonify({"message": "Correo enviado correctamente"}), 200
     except Exception as ex:
         return jsonify({"message": str(ex)})
+    
+@app.route('/validar_nuevo_valor', methods=['POST'])
+def validar_nuevo_valor_endpoint():
+    data = request.get_json()
+
+    tablero = cargarTablero()
+    nuevo_valor = data['nuevo_valor']
+    fila = data['fila']
+    columna = data['columna']
+
+    # Validar el nuevo valor en el tablero
+    es_valido = validar_nuevo_valor(tablero, nuevo_valor, fila, columna)
+
+    if es_valido:
+        response = {
+            'message': 'Dato ubicado correctamente'
+        }
+        status_code = 200
+    else:
+        response = {
+            'message': 'El dato no puede ser ubicado, cambie de posición'
+        }
+        status_code = 400
+        
+    return jsonify(response), status_code
 
 
 @app.route("/sudoku", methods=["GET"])
