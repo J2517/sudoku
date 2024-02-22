@@ -28,7 +28,7 @@ def guardarTablero(sudoku):
         json.dump(sudoku, file)
 
 
-def obtener_filas_y_columnas(sudoku):
+def ObtenerFilasyColumnas(sudoku):
     filas = []
     for bloque in sudoku:
         for fila_index, fila in enumerate(bloque["columnas"]):
@@ -48,9 +48,9 @@ def obtener_filas_y_columnas(sudoku):
     return filas, columnas
 
 
-def validar_nuevo_valor(sudoku, nuevo_valor, fila, columna):
+def validarNuevoValor(sudoku, nuevo_valor, fila, columna):
     # Obtener filas y columnas del sudoku
-    filas, columnas = obtener_filas_y_columnas(sudoku)
+    filas, columnas = ObtenerFilasyColumnas(sudoku)
 
     # Validar fila
     if nuevo_valor in filas[fila]:
@@ -88,35 +88,40 @@ def cuadrante(valor, fila, columna):
     return True
 
 
-def generar_tabla_html(tablero):
+def generarTabla(tablero):
     html = "<html><body>"
     for bloque in tablero:
         html += "-------------------------<br>"
         for fila in bloque["columnas"]:
-            html += "| {} {} {} | {} {} {} | {} {} {} |<br>".format(*fila[0], *fila[1], *fila[2])
+            html += "| {} {} {} | {} {} {} | {} {} {} |<br>".format(
+                *fila[0], *fila[1], *fila[2]
+            )
         html += "-------------------------<br>"
     html += "</body></html>"
     return html
+
 
 def enviarCorreo(sudoku):
     try:
         connection_string = os.environ.get("CONNECTION_STRING")
         if connection_string is None:
-            return {"message": "La variable de entorno CONNECTION_STRING no está definida"}, 500
+            return {
+                "message": "La variable de entorno CONNECTION_STRING no está definida"
+            }, 500
 
         client = EmailClient.from_connection_string(connection_string)
 
         message = {
             "senderAddress": os.environ.get("SENDER_ADDRESS"),
             "recipients": {
-                 "to": [
+                "to": [
                     {"address": "jackria345@gmail.com"},
                     {"address": "juan.carmona29296@ucaldas.edu.co"},
                 ],
             },
             "content": {
                 "subject": "Tablero de Sudoku",
-                "html": generar_tabla_html(sudoku),
+                "html": generarTabla(sudoku),
             },
         }
 
@@ -127,32 +132,28 @@ def enviarCorreo(sudoku):
     except Exception as ex:
         return {"message": str(ex)}, 500
 
-
-
-# @app.route("/validar_nuevo_valor", methods=["POST"])
-# def validar_nuevo_valor_endpoint():
-#     data = request.get_json()
+    # @app.route("/validarNuevoValor", methods=["POST"])
+    # def validarNuevoValor_endpoint():
+    #     data = request.get_json()
 
     if es_valido:
-        enviarCorreo(data['tablero'])
-        response = {
-            'message': 'Dato ubicado correctamente'
-        }
+        enviarCorreo(data["tablero"])
+        response = {"message": "Dato ubicado correctamente"}
         status_code = 200
     else:
-        response = {
-            'message': 'El dato no puede ser ubicado, cambie de posición'
-        }
+        response = {"message": "El dato no puede ser ubicado, cambie de posición"}
         status_code = 400
-        
+
     return jsonify(response), status_code
+
+
 #     sudoku = sudoku()
 #     nuevo_valor = data["nuevo_valor"]
 #     fila = data["fila"]
 #     columna = data["columna"]
 
 #     # Validar el nuevo valor en el sudoku
-#     es_valido = validar_nuevo_valor(sudoku, nuevo_valor, fila, columna)
+#     es_valido = validarNuevoValor(sudoku, nuevo_valor, fila, columna)
 
 #     if es_valido:
 #         response = {"message": "Dato ubicado correctamente"}
@@ -187,7 +188,7 @@ def ingresarValor():
 
         if cuadrante(valor, fila, columna):
             # Validar el nuevo valor en el sudoku
-            es_valido = validar_nuevo_valor(sudoku, valor, fila, columna)
+            es_valido = validarNuevoValor(sudoku, valor, fila, columna)
             if es_valido:
                 sudoku[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
                 enviarCorreo(sudoku)
