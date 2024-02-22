@@ -98,10 +98,6 @@ def enviarCorreo(sudoku):
     except Exception as ex:
         return {"message": str(ex)}, 500
 
-    # @app.route("/validarNuevoValor", methods=["POST"])
-    # def validarNuevoValor_endpoint():
-    #     data = request.get_json()
-
     if es_valido:
         enviarCorreo(data["tablero"])
         response = {"message": "Dato ubicado correctamente"}
@@ -130,36 +126,20 @@ def ingresarValor():
         if not (0 <= fila <= 8 and 0 <= columna <= 8):
             return jsonify({"message": "Fila y columna deben estar entre 1 y 9"}), 400
 
-        for i in range(3):
-            for j in range(3):
-                if tablero[seccion]["columnas"][filaSeccion][i][j] == valor:
-                    return (
-                        jsonify({"message": "El valor ya está presente en la fila"}),
-                        400,
-                    )
-                if tablero[seccion]["columnas"][j][subfila][subcolumna] == valor:
-                    return (
-                        jsonify({"message": "El valor ya está presente en la columna"}),
-                        400,
-                    )
-                if tablero[seccion]["columnas"][i][j][subcolumna] == valor:
-                    return (
-                        jsonify(
-                            {"message": "El valor ya está presente en el cuadrante"}
-                        ),
-                        400,
-                    )
-                if tablero[seccion]["columnas"][i][subfila][j] == valor:
-                    return (
-                        jsonify(
-                            {"message": "El valor ya está presente en el cuadrante"}
-                        ),
-                        400,
-                    )
-
         # Validar el nuevo valor en el sudoku
         es_valido = validarNuevoValor(tablero, valor, fila, columna)
         if es_valido:
+            for i in range(3):
+                for j in range(3):
+                    if tablero[seccion]["columnas"][filaSeccion][i][j] == valor:
+                        return False
+                    if tablero[seccion]["columnas"][j][subfila][subcolumna] == valor:
+                        return False
+                    if tablero[seccion]["columnas"][i][j][subcolumna] == valor:
+                        return False
+                    if tablero[seccion]["columnas"][i][subfila][j] == valor:
+                        return False
+
             tablero[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
             enviarCorreo(tablero)
             return jsonify({"message": f"Dato ubicado correctamente"}), 200
