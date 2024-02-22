@@ -1,37 +1,43 @@
-<html>
-<table id="sudokuTable">
-    <!-- Sudoku table will be dynamically generated here -->
-</table>
-
-<script>
-    fetch('sudoku.json')
-        .then(response => response.json())
-        .then(data => {
-            const sudokuTable = document.getElementById('sudokuTable');
-            data.forEach(row => {
-                const newRow = document.createElement('tr');
-                row.columnas.forEach(subgrid => {
-                    const subgridCell = document.createElement('td');
-                    const subgridTable = document.createElement('table');
-                    subgrid.forEach(subrow => {
-                        const subrowElement = document.createElement('tr');
-                        subrow.forEach(cell => {
-                            const cellElement = document.createElement('td');
-                            cellElement.textContent = cell;
-                            subrowElement.appendChild(cellElement);
-                        });
-                        subgridTable.appendChild(subrowElement);
-                    });
-                    subgridCell.appendChild(subgridTable);
-                    newRow.appendChild(subgridCell);
-                });
-                sudokuTable.appendChild(newRow);
-            });
-        })
-</script>
-
-<table>
-
-</table>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero de Sudoku</title>
+    <style>
+        /* Estilos CSS para el tablero de Sudoku */
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            width: 30px;
+            height: 30px;
+            border: 1px solid black;
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        {% for fila in tablero %}
+        <tr>
+            {% for subgrid in fila.columnas %}
+            <td>
+                <table>
+                    {% for subfila in subgrid %}
+                    <tr>
+                        {% for cell in subfila %}
+                        <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</body>
 </html>
+

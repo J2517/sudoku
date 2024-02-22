@@ -28,9 +28,6 @@ def guardarTablero(sudoku):
         json.dump(sudoku, file)
 
 
-sudoku = cargarTablero()
-
-
 def obtener_filas_y_columnas(tablero):
     filas = []
     for bloque in tablero:
@@ -114,9 +111,7 @@ def enviarCorreo(sudoku):
 def validar_nuevo_valor_endpoint():
     data = request.get_json()
 
-    tablero = cargarTablero()
-    nuevo_valor = data['valor']
-    tablero = sudoku()
+    tablero = data['tablero']
     nuevo_valor = data['nuevo_valor']
     fila = data['fila']
     columna = data['columna']
@@ -125,7 +120,7 @@ def validar_nuevo_valor_endpoint():
     es_valido = validar_nuevo_valor(tablero, nuevo_valor, fila, columna)
 
     if es_valido:
-        enviarCorreo(sudoku)
+        enviarCorreo(data['tablero'])
         response = {
             'message': 'Dato ubicado correctamente'
         }
