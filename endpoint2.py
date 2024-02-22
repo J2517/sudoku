@@ -31,6 +31,7 @@ def guardarTablero(sudoku):
 
 sudoku = cargarTablero()
 
+
 def obtener_filas_y_columnas(tablero):
     filas = []
     for bloque in tablero:
@@ -45,6 +46,7 @@ def obtener_filas_y_columnas(tablero):
             columnas[i].append(fila[i])
 
     return filas, columnas
+
 
 def validar_nuevo_valor(tablero, nuevo_valor, fila, columna):
     # Obtener filas y columnas del tablero
@@ -95,7 +97,7 @@ def enviarCorreo(sudoku):
         message = {
             "senderAddress": os.environ.get("SENDER_ADDRESS"),
             "recipients": {
-                "to": [{"address": "jackria345@gmail.com"}],
+                "to": [{"address": "juan.carmona29296@ucaldas.edu.co"}],
             },
             "content": {
                 "subject": "Correo electrónico de prueba",
@@ -114,7 +116,7 @@ def validar_nuevo_valor_endpoint():
     data = request.get_json()
 
     tablero = cargarTablero()
-    nuevo_valor = data['nuevo_valor']
+    nuevo_valor = data['valor']
     fila = data['fila']
     columna = data['columna']
 
@@ -122,6 +124,7 @@ def validar_nuevo_valor_endpoint():
     es_valido = validar_nuevo_valor(tablero, nuevo_valor, fila, columna)
 
     if es_valido:
+        enviarCorreo(sudoku)
         response = {
             'message': 'Dato ubicado correctamente'
         }
