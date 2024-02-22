@@ -18,8 +18,18 @@ load_dotenv()
 
 app = Flask(__name__)
 
-with open("sudoku.json") as file:
-    sudoku = json.load(file)
+
+def cargarTablero():
+    with open("sudoku.json") as file:
+        return json.load(file)
+
+
+def guardarTablero(sudoku):
+    with open("sudoku.json", "w") as file:
+        json.dump(sudoku, file)
+
+
+sudoku = cargarTablero()
 
 
 # Verificar cuadrante
@@ -94,6 +104,7 @@ def ingresarValor():
 
         if cuadrante(valor, fila, columna):
             sudoku[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
+            guardarTablero(sudoku)
             enviarCorreo(sudoku)
             return jsonify({"message": f"Dato ubicado correctamente"}), 200
         else:
