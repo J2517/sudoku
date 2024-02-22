@@ -68,12 +68,6 @@ sudoku_ejemplo = {
                 [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
             ]
         }
-    "nuevo_valor": 1
-}
-
-# Prueba de la función enviarCorreo con datos de ejemplo
-resultado, status_code = enviarCorreo(sudoku_ejemplo)
-print(resultado, status_code)
     ],
     "fila": 0,
     "columna": 0,
