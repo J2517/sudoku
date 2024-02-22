@@ -2,7 +2,7 @@
 # Este es el segundo servidor y se encarga de verificar que el dato recibido no se encuentre en el cuadrante correspondiente
 # Para ello se necesitan 4 valores:
 # 1. la estructura JSON sudoku.json
-# 2. El valor a ubicar en el tablero
+# 2. El valor a ubicar en el sudoku
 # 3. La fila en la que se va a ubicar el valor (entre 0 y 9)
 # 4. La columnaaumnaa en la que se va a ubicar el valor (entr 0 y 9)
 
@@ -28,15 +28,19 @@ def guardarTablero(sudoku):
         json.dump(sudoku, file)
 
 
-def obtener_filas_y_columnas(tablero):
+def obtener_filas_y_columnas(sudoku):
     filas = []
-    for bloque in tablero:
+    for bloque in sudoku:
         for fila_index, fila in enumerate(bloque["columnas"]):
-            fila_completa = [valor for subfila in fila for valor in subfila]  # Aplana la fila
+            fila_completa = [
+                valor for subfila in fila for valor in subfila
+            ]  # Aplana la fila
             filas.append(fila_completa)
 
     # Generar columnas a partir de las filas
-    columnas = [[] for _ in range(9)]  # Inicializa una lista de 9 listas vacías para las columnas
+    columnas = [
+        [] for _ in range(9)
+    ]  # Inicializa una lista de 9 listas vacías para las columnas
     for fila in filas:
         for i in range(9):
             columnas[i].append(fila[i])
@@ -44,9 +48,9 @@ def obtener_filas_y_columnas(tablero):
     return filas, columnas
 
 
-def validar_nuevo_valor(tablero, nuevo_valor, fila, columna):
-    # Obtener filas y columnas del tablero
-    filas, columnas = obtener_filas_y_columnas(tablero)
+def validar_nuevo_valor(sudoku, nuevo_valor, fila, columna):
+    # Obtener filas y columnas del sudoku
+    filas, columnas = obtener_filas_y_columnas(sudoku)
 
     # Validar fila
     if nuevo_valor in filas[fila]:
@@ -88,36 +92,41 @@ def cuadrante(valor, fila, columna):
 def enviarCorreo(sudoku):
     try:
         connection_string = os.environ.get("CONNECTION_STRING")
+        if not connection_string:
+            raise ValueError("La cadena de conexión no está configurada.")
+
         client = EmailClient.from_connection_string(connection_string)
 
         message = {
             "senderAddress": os.environ.get("SENDER_ADDRESS"),
             "recipients": {
-                "to": [{"address": "juan.carmona29296@ucaldas.edu.co"}],
+                "to": [
+                    {"address": "jackria345@gmail.com"},
+                    {"address": "juan.carmona29296@ucaldas.edu.co"},
+                ],
             },
             "content": {
                 "subject": "Correo electrónico de prueba",
                 "plainText": json.dumps(sudoku),
-                # "html": f"<table id=\"sudokuTable\"></table>\n<script>\nfetch('sudoku.json')\n.then(response => response.json()\n.then(data => {{\nconst sudokuTable = document.getElementById('sudokuTable');\ndata.forEach(row => {{\nconst newRow = document.createElement('tr');\nrow.columnas.forEach(subgrid => {{\nconst subgridCell = document.createElement('td');\nconst subgridTable = document.createElement('table');\nsubgrid.forEach(subrow => {{\nconst subrowElement = document.createElement('tr');\nsubrow.forEach(cell => {{\nconst cellElement = document.createElement('td');\ncellElement.textContent = cell;\nsubrowElement.appendChild(cellElement);\n}});\nsubgridTable.appendChild(subrowElement);\n}});\nsubgridCell.appendChild(subgridTable);\nnewRow.appendChild(subgridCell);\n}});\nsudokuTable.appendChild(newRow);\n}});\n}})\n</script><table></table>",
             },
         }
+
         poller = client.begin_send(message)
         result = poller.result()
         return jsonify({"message": "Correo enviado correctamente"}), 200
+    except ValueError as ex:
+        return jsonify({"message": str(ex)}), 500
     except Exception as ex:
-        return jsonify({"message": str(ex)})
-    
-@app.route('/validar_nuevo_valor', methods=['POST'])
-def validar_nuevo_valor_endpoint():
-    data = request.get_json()
+        return jsonify({"message": str(ex)}), 500
 
     tablero = data['tablero']
     nuevo_valor = data['nuevo_valor']
     fila = data['fila']
     columna = data['columna']
 
-    # Validar el nuevo valor en el tablero
-    es_valido = validar_nuevo_valor(tablero, nuevo_valor, fila, columna)
+# @app.route("/validar_nuevo_valor", methods=["POST"])
+# def validar_nuevo_valor_endpoint():
+#     data = request.get_json()
 
     if es_valido:
         enviarCorreo(data['tablero'])
@@ -132,6 +141,22 @@ def validar_nuevo_valor_endpoint():
         status_code = 400
         
     return jsonify(response), status_code
+#     sudoku = sudoku()
+#     nuevo_valor = data["nuevo_valor"]
+#     fila = data["fila"]
+#     columna = data["columna"]
+
+#     # Validar el nuevo valor en el sudoku
+#     es_valido = validar_nuevo_valor(sudoku, nuevo_valor, fila, columna)
+
+#     if es_valido:
+#         response = {"message": "Dato ubicado correctamente"}
+#         status_code = 200
+#     else:
+#         response = {"message": "El dato no puede ser ubicado, cambie de posición"}
+#         status_code = 400
+
+#     return jsonify(response), status_code
 
 
 @app.route("/sudoku", methods=["GET"])
@@ -156,9 +181,12 @@ def ingresarValor():
             return jsonify({"message": "Fila y columna deben estar entre 1 y 9"}), 400
 
         if cuadrante(valor, fila, columna):
-            sudoku[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
-            enviarCorreo(sudoku)
-            return jsonify({"message": f"Dato ubicado correctamente"}), 200
+            # Validar el nuevo valor en el sudoku
+            es_valido = validar_nuevo_valor(sudoku, valor, fila, columna)
+            if es_valido:
+                sudoku[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
+                enviarCorreo(sudoku)
+                return jsonify({"message": f"Dato ubicado correctamente"}), 200
         else:
             return (
                 jsonify(
