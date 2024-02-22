@@ -19,6 +19,15 @@ load_dotenv()
 app = Flask(__name__)
 
 
+# with open("sudoku.json") as file:
+#     sudoku = json.load(file)
+
+
+# def guardarTablero(sudoku):
+#     with open("sudoku.json", "w") as file:
+#         json.dump(sudoku, file)
+
+
 def ObtenerFilasyColumnas(sudoku):
     filas = []
     for bloque in sudoku:
@@ -52,6 +61,32 @@ def validarNuevoValor(sudoku, nuevo_valor, fila, columna):
         return False
 
     return True
+
+
+# Verificar cuadrante
+# def cuadrante(valor, fila, columna):
+#     # Calcula la sección, fila y columna de la submatriz
+#     seccion = (
+#         fila // 3
+#     )  # el resultado de la división entera indica "fila": en el archivo json
+#     filaSeccion = (
+#         fila % 3
+#     )  # el residuo de la división entera indica "subfila": en el archivo json
+#     subfila = columna // 3  #
+#     subcolumna = columna % 3
+
+#     for i in range(3):
+#         for j in range(3):
+            
+#             if sudoku[seccion]["columnas"][filaSeccion][i][j] == valor:
+#                 return False
+#             if sudoku[seccion]["columnas"][j][subfila][subcolumna] == valor:
+#                 return False
+#             if sudoku[seccion]["columnas"][i][j][subcolumna] == valor:
+#                 return False
+#             if sudoku[seccion]["columnas"][i][subfila][j] == valor:
+#                 return False
+#     return True
 
 
 def generarTabla(tablero):
@@ -113,6 +148,63 @@ def enviarCorreo(sudoku):
     return jsonify(response), status_code
 
 
+#     sudoku = sudoku()
+#     nuevo_valor = data["nuevo_valor"]
+#     fila = data["fila"]
+#     columna = data["columna"]
+
+#     # Validar el nuevo valor en el sudoku
+#     es_valido = validarNuevoValor(sudoku, nuevo_valor, fila, columna)
+
+#     if es_valido:
+#         response = {"message": "Dato ubicado correctamente"}
+#         status_code = 200
+#     else:
+#         response = {"message": "El dato no puede ser ubicado, cambie de posición"}
+#         status_code = 400
+
+#     return jsonify(response), status_code
+
+
+# @app.route("/sudoku", methods=["GET"])
+# def mostrarSudoku():
+#     return jsonify(sudoku)
+
+
+# @app.route("/sudoku", methods=["POST"])
+# def ingresarValor():
+#     try:
+#         data = request.json
+#         valor = data["valor"]
+#         fila = data["fila"] - 1
+#         columna = data["columna"] - 1
+
+#         seccion = fila // 3
+#         filaSeccion = fila % 3
+#         subfila = columna // 3
+#         subcolumna = columna % 3
+
+#         if not (0 <= fila <= 8 and 0 <= columna <= 8):
+#             return jsonify({"message": "Fila y columna deben estar entre 1 y 9"}), 400
+
+#         if cuadrante(valor, fila, columna):
+#             # Validar el nuevo valor en el sudoku
+#             es_valido = validarNuevoValor(sudoku, valor, fila, columna)
+#             if es_valido:
+#                 sudoku[seccion]["columnas"][filaSeccion][subfila][subcolumna] = valor
+#                 enviarCorreo(sudoku)
+#                 return jsonify({"message": f"Dato ubicado correctamente"}), 200
+#         else:
+#             return (
+#                 jsonify(
+#                     {"message": f"El dato no puede ser ubicado, cambie de posición"}
+#                 ),
+#                 400,
+#             )
+#     except Exception as ex:
+#         return jsonify({"message": str(ex)})
+#         #return jsonify({"message": "Ocurrió un error al procesar la solicitud"}), 500
+
 @app.route("/sudoku", methods=["POST"])
 def ingresarValor():
     try:
@@ -133,29 +225,13 @@ def ingresarValor():
         for i in range(3):
             for j in range(3):
                 if tablero[seccion]["columnas"][filaSeccion][i][j] == valor:
-                    return (
-                        jsonify({"message": "El valor ya está presente en la fila"}),
-                        400,
-                    )
+                    return jsonify({"message": "El valor ya está presente en la fila"}), 400
                 if tablero[seccion]["columnas"][j][subfila][subcolumna] == valor:
-                    return (
-                        jsonify({"message": "El valor ya está presente en la columna"}),
-                        400,
-                    )
+                    return jsonify({"message": "El valor ya está presente en la columna"}), 400
                 if tablero[seccion]["columnas"][i][j][subcolumna] == valor:
-                    return (
-                        jsonify(
-                            {"message": "El valor ya está presente en el cuadrante"}
-                        ),
-                        400,
-                    )
+                    return jsonify({"message": "El valor ya está presente en el cuadrante"}), 400
                 if tablero[seccion]["columnas"][i][subfila][j] == valor:
-                    return (
-                        jsonify(
-                            {"message": "El valor ya está presente en el cuadrante"}
-                        ),
-                        400,
-                    )
+                    return jsonify({"message": "El valor ya está presente en el cuadrante"}), 400
 
         # Validar el nuevo valor en el sudoku
         es_valido = validarNuevoValor(tablero, valor, fila, columna)
@@ -164,15 +240,9 @@ def ingresarValor():
             enviarCorreo(tablero)
             return jsonify({"message": f"Dato ubicado correctamente"}), 200
         else:
-            return (
-                jsonify(
-                    {"message": f"El dato no puede ser ubicado, cambie de posición"}
-                ),
-                400,
-            )
+            return jsonify({"message": f"El dato no puede ser ubicado, cambie de posición"}), 400
     except Exception as ex:
         return jsonify({"message": str(ex)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
